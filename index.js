@@ -50,7 +50,7 @@ logger.setup(VARIABLE.debug);
 const init = async () => {
 	try {
 
-		/** Display the onscreen help menu. */
+		/* Display the onscreen help menu. */
 		defaults.displayHelp();
 
 		/**

@@ -4,3 +4,4 @@
 .markdownlint.json
 .build
 logs
+node_modules

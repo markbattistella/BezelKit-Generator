@@ -162,6 +162,54 @@
         "bezel": 0,
         "name": "iPad (6th generation)"
       },
+      "iPad8,1": {
+        "bezel": 18,
+        "name": "iPad Pro (11-inch) (3rd generation)"
+      },
+      "iPad8,10": {
+        "bezel": 18,
+        "name": "iPad Pro (11-inch) (4th generation)"
+      },
+      "iPad8,11": {
+        "bezel": 18,
+        "name": "iPad Pro (12.9-inch) (4th generation)"
+      },
+      "iPad8,12": {
+        "bezel": 18,
+        "name": "iPad Pro (12.9-inch) (4th generation)"
+      },
+      "iPad8,2": {
+        "bezel": 18,
+        "name": "iPad Pro (11-inch) (3rd generation)"
+      },
+      "iPad8,3": {
+        "bezel": 18,
+        "name": "iPad Pro (11-inch) (3rd generation)"
+      },
+      "iPad8,4": {
+        "bezel": 18,
+        "name": "iPad Pro (11-inch) (3rd generation)"
+      },
+      "iPad8,5": {
+        "bezel": 18,
+        "name": "iPad Pro (12.9-inch) (3rd generation)"
+      },
+      "iPad8,6": {
+        "bezel": 18,
+        "name": "iPad Pro (12.9-inch) (3rd generation)"
+      },
+      "iPad8,7": {
+        "bezel": 18,
+        "name": "iPad Pro (12.9-inch) (3rd generation)"
+      },
+      "iPad8,8": {
+        "bezel": 18,
+        "name": "iPad Pro (12.9-inch) (3rd generation)"
+      },
+      "iPad8,9": {
+        "bezel": 18,
+        "name": "iPad Pro (11-inch) (4th generation)"
+      },
       "iPad11,1": {
         "bezel": 0,
         "name": "iPad mini (5th generation)"
@@ -210,6 +258,22 @@
         "bezel": 18,
         "name": "iPad mini (6th generation)"
       },
+      "iPad13,16": {
+        "bezel": 18,
+        "name": "iPad Air (5th generation)"
+      },
+      "iPad13,17": {
+        "bezel": 18,
+        "name": "iPad Air (5th generation)"
+      },
+      "iPad13,18": {
+        "bezel": 25,
+        "name": "iPad (10th generation)"
+      },
+      "iPad13,19": {
+        "bezel": 25,
+        "name": "iPad (10th generation)"
+      },
       "iPad13,2": {
         "bezel": 18,
         "name": "iPad Air (4th generation)"
@@ -237,6 +301,70 @@
       "iPad13,9": {
         "bezel": 18,
         "name": "iPad Pro (12.9-inch) (5th generation)"
+      },
+      "iPad14,1": {
+        "bezel": 21.5,
+        "name": "iPad mini (6th generation)"
+      },
+      "iPad14,10": {
+        "bezel": 18,
+        "name": "iPad Air 13-inch (M2)"
+      },
+      "iPad14,11": {
+        "bezel": 18,
+        "name": "iPad Air 13-inch (M2)"
+      },
+      "iPad14,2": {
+        "bezel": 21.5,
+        "name": "iPad mini (6th generation)"
+      },
+      "iPad14,3": {
+        "bezel": 18,
+        "name": "iPad Pro (11-inch) (4th generation)"
+      },
+      "iPad14,4": {
+        "bezel": 18,
+        "name": "iPad Pro (11-inch) (4th generation)"
+      },
+      "iPad14,5": {
+        "bezel": 18,
+        "name": "iPad Pro (12.9-inch) (6th generation)"
+      },
+      "iPad14,6": {
+        "bezel": 18,
+        "name": "iPad Pro (12.9-inch) (6th generation)"
+      },
+      "iPad14,8": {
+        "bezel": 18,
+        "name": "iPad Air 11-inch (M2)"
+      },
+      "iPad14,9": {
+        "bezel": 18,
+        "name": "iPad Air 11-inch (M2)"
+      },
+      "iPad16,3": {
+        "bezel": 30,
+        "name": "iPad Pro 11-inch (M4)"
+      },
+      "iPad16,4": {
+        "bezel": 30,
+        "name": "iPad Pro 11-inch (M4)"
+      },
+      "iPad16,5": {
+        "bezel": 30,
+        "name": "iPad Pro 13-inch (M4)"
+      },
+      "iPad16,6": {
+        "bezel": 30,
+        "name": "iPad Pro 13-inch (M4)"
+      },
+      "iPad16,7": {
+        "bezel": 0,
+        "name": "iPad Pro (12.9-inch) (1st generation)"
+      },
+      "iPad16,8": {
+        "bezel": 0,
+        "name": "iPad Pro (12.9-inch) (1st generation)"
       }
     },
     "iPhone": {
