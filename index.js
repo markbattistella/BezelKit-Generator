@@ -82,7 +82,8 @@ const init = async () => {
 			foundDevices,
 			VARIABLE.xCodeData.project,
 			VARIABLE.xCodeData.scheme,
-			VARIABLE.xCodeData.bundleId
+			VARIABLE.xCodeData.bundleId,
+			VARIABLE.appOutput
 		);
 
 		/**
@@ -94,7 +95,14 @@ const init = async () => {
 			bezelSimulators,
 			unfoundDevices,
 			VARIABLE.databaseJson,
-			VARIABLE.output
+			VARIABLE.jsonOutput
+		);
+
+		/**
+		 * Delete the output directory with the compiled app
+		 */
+		await util.deleteDirectory(
+			VARIABLE.appOutput
 		);
 
 	} catch (error) {

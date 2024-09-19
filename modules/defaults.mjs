@@ -15,9 +15,10 @@ const DEFAULTS = {
   xCodeData: {
     project: './FetchBezel/FetchBezel.xcodeproj',
     scheme: 'FetchBezel',
-    bundleId: 'com.mb.FetchBezel'
+    bundleId: 'com.markbattistella.FetchBezel'
   },
-  output: '../Sources/BezelKit/Resources/bezel.min.json',
+  jsonOutput: '../Sources/BezelKit/Resources/bezel.min.json',
+  appOutput: './output',
   debug: true
 };
 
@@ -54,10 +55,12 @@ export const getVariables = () => {
       bundleId: assignOrDefault(
         ARGS.bundle || ARGS.b, DEFAULTS.xCodeData.bundleId)
     },
-    output: assignOrDefault(
-      ARGS.output || ARGS.o, DEFAULTS.output),
+    jsonOutput: assignOrDefault(
+      ARGS.jsonOutput || ARGS.o, DEFAULTS.jsonOutput),
+    appOutput: assignOrDefault(
+      ARGS.appOutput || ARGS.a, DEFAULTS.appOutput),
     debug: assignOrDefault(
-      ARGS.debug || ARGS.d, DEFAULTS.debug) === 'false' ? false : true
+      ARGS.debug || ARGS.d, DEFAULTS.debug) === 'false' ? false : true  
   };
 };
 
@@ -85,10 +88,13 @@ Options:
                         Default: 'FetchBezel'
 
   --bundle, -b          Bundle ID for the FetchBezel app.
-                        Default: 'com.mb.FetchBezel'
+                        Default: 'ccom.markbattistella.FetchBezel'
 
-  --output, -o          Path to the output JSON file.
+  --jsonOutput, -o      Path to the output JSON file.
                         Default: '../Sources/BezelKit/Resources/bezel.min.json'
+
+  --appOutput, -a       Path to the output directory for the .app file.
+                        Default: './build'
 
   --debug, -d           Enable debugging mode. Pass 'false' to disable.
                         Default: 'true'
