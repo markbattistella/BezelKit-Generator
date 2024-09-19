@@ -35,26 +35,12 @@ const executeCommand = command => {
 };
 
 /**
- * Extracts a value from a settings string based on a key.
- * The settings are expected to be newline-separated key-value pairs.
- * 
- * @param {string} settings - The settings string, newline-separated.
- * @param {string} key - The key for which the value needs to be extracted.
- * @returns {string|null} - The extracted value or null if the key is not found.
- */
-const getSettingValue = (settings, key) => {
-	const settingLine = settings.split('\n').find(line => line.includes(key));
-	return settingLine ? settingLine.split('=')[1].trim() : null;
-};
-
-/**
  * Introduces a delay in the execution.
  * 
  * @param {number} ms - The delay duration in milliseconds.
  * @returns {Promise<void>} - Resolves after the specified delay.
  */
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 
 /**
  * Extracts relevant device data from a specified file.
@@ -65,6 +51,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
  * @throws {Error} If there's an error in parsing the file or processing the data.
  */
 export const extractDeviceDataFromFile = async (file) => {
+
     // Parse the provided JSON file to get the original database.
     const originalDatabase = await parseJsonFile(file);
 
@@ -96,11 +83,13 @@ export const extractDeviceDataFromFile = async (file) => {
  * @returns {Object} - An object containing only the devices from the pending list that are not in the main device list.
  */
 const filterUnlistedDevices = (pendingDevices, allDevices) => {
+
     // Retrieve the keys (device identifiers) from the main device database.
     const deviceKeys = Object.keys(allDevices);
     
     // Filter out devices from the pending list that aren't present in the main device list.
     return Object.keys(pendingDevices).reduce((acc, deviceKey) => {
+
         // If a device from the pending list isn't in the main list, add it to the accumulator.
         if (!deviceKeys.includes(deviceKey)) {
             acc[deviceKey] = pendingDevices[deviceKey];
@@ -108,7 +97,6 @@ const filterUnlistedDevices = (pendingDevices, allDevices) => {
         return acc;
     }, {});
 };
-
 
 /**
  * Transforms device objects into an array of device identifiers and names.
@@ -182,7 +170,7 @@ const getSupportedRuntime = name => {
 const installSimulator = ({ name, simulatorId, runtimeId }) => 
     executeCommand(`xcrun simctl create "${name}" "${simulatorId}" "${runtimeId}"`)
         .toString()
-		.trim();
+				.trim();
 
 /**
  * Processes a simulator device by either retrieving its existing data or installing 
@@ -249,6 +237,7 @@ export const getSimulatorObjectData = objects => {
 
     // Iterate over each transformed object.
     transformedObjects.forEach(object => {
+
         // Process the simulator object to check if it exists.
         const result = processSimulator(object);
 
@@ -260,30 +249,23 @@ export const getSimulatorObjectData = objects => {
     return { foundDevices, unfoundDevices };
 };
 
-
 /**
  * Returns the build path for an app using given project parameters.
  * 
  * @param {string} projectPath - The path to the Xcode project.
  * @param {string} projectScheme - The scheme name of the Xcode project.
+ * @param {string} outputPath - The path where the derived data (including the built app) will be stored.
  * @returns {string} The path to the built app.
  */
-const getAppBuildPath = (projectPath, projectScheme) => {
+const getAppBuildPath = (projectPath, projectScheme, outputPath) => {
 
-	// Execute a clean build of the Xcode project, suppressing warnings in the output.
-    executeCommand(`xcodebuild -project "${projectPath}" -scheme "${projectScheme}" -destination 'generic/platform=iOS Simulator' clean build 2>&1 | grep -v warning`);
+    // Build the project with the specified derived data path
+    executeCommand(`xcodebuild -project "${projectPath}" -scheme "${projectScheme}" -sdk iphonesimulator -configuration Debug -derivedDataPath "${outputPath}" clean build 2>&1 | grep -v warning`);
 
-    // Retrieve build settings of the Xcode project.
-    const buildSettings = executeCommand(`xcodebuild -project "${projectPath}" -sdk iphonesimulator -configuration Debug -showBuildSettings`);
+    // Define the app's output path
+    const appBuildPath = `${outputPath}/Build/Products/Debug-iphonesimulator/${projectScheme}.app`;
 
-    // Extract the directory where the built products reside from the build settings.
-    const builtProductsDirectory = getSettingValue(buildSettings, "BUILT_PRODUCTS_DIR");
-
-    // Extract the name of the built product from the build settings.
-    const fullProductName = getSettingValue(buildSettings, "FULL_PRODUCT_NAME");
-
-    // Return the full path to the built app.
-    return `${builtProductsDirectory}/${fullProductName}`;
+    return appBuildPath;
 };
 
 /**
@@ -296,6 +278,7 @@ const shutdownSimulator = (simulator) => {
 
 	// Check if the simulator is not already in a 'Shutdown' state.
     if (simulator.state !== 'Shutdown') {
+
         // Log a warning that the simulator isn't shut down.
         logger.warn('Simulator is not shutdown', null, 2);
 
@@ -341,11 +324,11 @@ const readSimulatorData = async (udid, bundleId) => {
  * @param {string} appBundleID - The bundle ID of the app for which data is being generated.
  * @returns {Object[]} An array of objects containing data for each simulator.
  */
-export const generateData = async (simulators, projectPath, projectScheme, appBundleID) => {
+export const generateData = async (simulators, projectPath, projectScheme, appBundleID, outputPath) => {
 	const allSimulatorData = [];
 
 	// Determine the build path for the app using the project details.
-	const appBuildPath = getAppBuildPath(projectPath, projectScheme);
+	const appBuildPath = getAppBuildPath(projectPath, projectScheme, outputPath);
 	const totalSimulators = simulators.length;
 
 	for (const [index, simulator] of simulators.entries()) {
@@ -376,7 +359,7 @@ export const generateData = async (simulators, projectPath, projectScheme, appBu
 		// Install and launch the app on the simulator.
 		logger.info(`Installing local project with bundle ID: ${appBundleID}`, null, 2);
 		logger.log('↳ Installing app', 6);
-		executeCommand(`xcrun simctl install '${simulator.udid}' "${appBuildPath}"`);
+		executeCommand(`xcrun simctl install '${simulator.udid}' '${appBuildPath}'`);
 
 		logger.log('↳ Launching app', 6);
 		executeCommand(`xcrun simctl launch '${simulator.udid}' '${appBundleID}'`);
@@ -561,4 +544,18 @@ export const saveNewDatabase = async (originalData, newData, unfoundDevices, cac
 	// Write the minified data to the package file.
 	await fsp.writeFile(packageFilePath, JSON.stringify(minifiedData, null, null), 'utf-8');
 	logger.success(`Saved resource file: ${packageFilePath}`);
+};
+
+/**
+ * Deletes the specified directory and its contents.
+ * 
+ * @param {string} dirPath - The path to the directory to delete.
+ */
+export const deleteDirectory = async (dirPath) => {
+  try {
+    await fsp.rm(dirPath, { recursive: true, force: true });
+    logger.success(`Successfully deleted directory: ${dirPath}`);
+  } catch (error) {
+    logger.error(`Failed to delete directory: ${dirPath}`, error);
+  }
 };

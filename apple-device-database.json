@@ -579,6 +579,22 @@
       "iPhone16,2": {
         "bezel": 55,
         "name": "iPhone 15 Pro Max"
+      },
+      "iPhone17,1": {
+        "bezel": 62,
+        "name": "iPhone 16 Pro"
+      },
+      "iPhone17,2": {
+        "bezel": 62,
+        "name": "iPhone 16 Pro Max"
+      },
+      "iPhone17,3": {
+        "bezel": 55,
+        "name": "iPhone 16"
+      },
+      "iPhone17,4": {
+        "bezel": 55,
+        "name": "iPhone 16 Plus"
       }
     },
     "iPod": {
