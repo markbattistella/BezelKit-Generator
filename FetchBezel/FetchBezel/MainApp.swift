@@ -149,3 +149,7 @@ fileprivate extension UIDevice {
 		return identifier
 	}
 }
+
+#Preview {
+    MainView()
+}
