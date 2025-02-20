@@ -603,6 +603,10 @@
       "iPhone17,4": {
         "bezel": 55,
         "name": "iPhone 16 Plus"
+      },
+      "iPhone17,5": {
+        "bezel": 47.33,
+        "name": "iPhone 16e"
       }
     },
     "iPod": {
