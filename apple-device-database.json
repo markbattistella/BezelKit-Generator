@@ -342,6 +342,18 @@
         "bezel": 18,
         "name": "iPad Air 11-inch (M2)"
       },
+      "iPad15,3": {
+        "bezel": 18,
+        "name": "iPad Air 11-inch (M3)"
+      },
+      "iPad15,5": {
+        "bezel": 18,
+        "name": "iPad Air 13-inch (M3)"
+      },
+      "iPad15,7": {
+        "bezel": 25,
+        "name": "iPad (A16)"
+      },
       "iPad16,1": {
         "bezel": 21.5,
         "name": "iPad mini (A17 Pro)"
