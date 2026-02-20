@@ -354,6 +354,10 @@
         "bezel": 25,
         "name": "iPad (A16)"
       },
+      "iPad15,8": {
+        "bezel": 25,
+        "name": "iPad (A16)"
+      },
       "iPad16,1": {
         "bezel": 21.5,
         "name": "iPad mini (A17 Pro)"
@@ -385,6 +389,22 @@
       "iPad16,8": {
         "bezel": 0,
         "name": "iPad Pro (12.9-inch) (1st generation)"
+      },
+      "iPad17,1": {
+        "bezel": 30,
+        "name": "iPad Pro 11-inch (M5)"
+      },
+      "iPad17,2": {
+        "bezel": 30,
+        "name": "iPad Pro 11-inch (M5)"
+      },
+      "iPad17,3": {
+        "bezel": 30,
+        "name": "iPad Pro 13-inch (M5)"
+      },
+      "iPad17,4": {
+        "bezel": 30,
+        "name": "iPad Pro 13-inch (M5)"
       }
     },
     "iPhone": {
@@ -619,6 +639,22 @@
       "iPhone17,5": {
         "bezel": 47.33,
         "name": "iPhone 16e"
+      },
+      "iPhone18,1": {
+        "bezel": 62,
+        "name": "iPhone 17 Pro"
+      },
+      "iPhone18,2": {
+        "bezel": 62,
+        "name": "iPhone 17 Pro Max"
+      },
+      "iPhone18,3": {
+        "bezel": 62,
+        "name": "iPhone 17"
+      },
+      "iPhone18,4": {
+        "bezel": 62,
+        "name": "iPhone Air"
       }
     },
     "iPod": {
@@ -653,36 +689,7 @@
     }
   },
   "pending": {
-    "iPad15,7": {
-      "name": "iPad (A16)"
-    },
-    "iPad15,8": {
-      "name": "iPad (A16)"
-    },
-    "iPad17,1": {
-      "name": "iPad Pro 11-inch (M5)"
-    },
-    "iPad17,2": {
-      "name": "iPad Pro 11-inch (M5)"
-    },
-    "iPad17,3": {
-      "name": "iPad Pro 13-inch (M5)"
-    },
-    "iPad17,4": {
-      "name": "iPad Pro 13-inch (M5)"
-    },
-    "iPhone18,3": {
-      "name": "iPhone 17"
-    },
-    "iPhone18,4": {
-      "name": "iPhone Air"
-    },
-    "iPhone18,1": {
-      "name": "iPhone 17 Pro"
-    },
-    "iPhone18,2": {
-      "name": "iPhone 17 Pro Max"
-    }
   },
-  "problematic": {}
+  "problematic": {
+  }
 }
