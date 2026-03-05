@@ -46,6 +46,16 @@ struct GenerateDocs: ParsableCommand {
     )
     var output: String = "../SupportedDeviceList.md"
 
+    @Flag(
+        name: .long,
+        help: """
+            After generating docs, commit both repos (yyyy-MM-dd), push, tag the \
+            parent repo (yy.m.d), and publish a GitHub release with a device diff \
+            as the release notes. Requires the `gh` CLI to be installed.
+            """
+    )
+    var release: Bool = false
+
     // MARK: - Run
 
     mutating func run() throws {
@@ -54,6 +64,11 @@ struct GenerateDocs: ParsableCommand {
         let markdown = buildMarkdown(from: json)
         try markdown.write(toFile: output, atomically: true, encoding: .utf8)
         print("Generated: \(output)")
+
+        if release {
+            let manager = ReleaseManager(inputPath: input)
+            try manager.run()
+        }
     }
 
     // MARK: - Markdown builder
