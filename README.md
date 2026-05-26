@@ -22,7 +22,7 @@ It uses a SwiftUI app (`FetchBezel`) that reads the private `UIScreen._displayCo
 
 - macOS 13 or later
 - Xcode with at least one iOS Simulator runtime installed
-- Swift 5.10+
+- Swift 6.0+
 
 Pure Swift — no external toolchain required.
 
