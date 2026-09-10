@@ -41,17 +41,18 @@ struct DatabaseManager {
     // MARK: - Merge results into database
 
     /// Writes the bezel result to every identifier that shares the simulator name.
+    ///
+    /// Results here come from a booted simulator, so they are recorded as
+    /// ``DeviceSource/simulator`` and become eligible to corroborate profile-derived values
+    /// in ``Triage``. Category is taken from the identifier rather than the display name,
+    /// which keeps a device such as `iPad16,8` in the right section regardless of how its
+    /// simulator happens to be named.
     func merge(results: [ResolvedSimulator], into database: inout DeviceDatabase) {
         for sim in results {
             guard let bezel = sim.bezel else { continue }
-            let category = sim.name.components(separatedBy: " ").first ?? "iPhone"
-            let info = DeviceInfo(bezel: bezel, name: sim.name)
+            let info = DeviceInfo(bezel: bezel, name: sim.name, source: .simulator)
             for identifier in sim.identifiers {
-                switch category {
-                case "iPad":  database.devices.iPad[identifier]   = info
-                case "iPod":  database.devices.iPod[identifier]   = info
-                default:      database.devices.iPhone[identifier] = info
-                }
+                database[identifier] = info
             }
         }
     }
@@ -131,9 +132,9 @@ extension DatabaseManager {
 
         // devices
         var devicesObj = OrderedJSONObject()
-        devicesObj.append("iPad",   deviceSection(database.devices.iPad))
-        devicesObj.append("iPhone", deviceSection(database.devices.iPhone))
-        devicesObj.append("iPod",   deviceSection(database.devices.iPod))
+        devicesObj.append("iPad",   deviceSection(database.devices.iPad,   includeSource: !minify))
+        devicesObj.append("iPhone", deviceSection(database.devices.iPhone, includeSource: !minify))
+        devicesObj.append("iPod",   deviceSection(database.devices.iPod,   includeSource: !minify))
         root.append("devices", devicesObj.jsonValue)
 
         if !minify {
@@ -144,13 +145,24 @@ extension DatabaseManager {
         return root.serialize(pretty: !minify, indent: 0)
     }
 
-    private func deviceSection(_ dict: [String: DeviceInfo]) -> JSONValue {
+    /// Serialises one category.
+    ///
+    /// `source` is written only to the cache database, never to the minified package
+    /// resource — `bezel.min.json` ships inside BezelKit and its shape is consumed by
+    /// `Database.swift`, so it stays exactly as it was.
+    private func deviceSection(_ dict: [String: DeviceInfo], includeSource: Bool) -> JSONValue {
         var section = OrderedJSONObject()
         for key in dict.keys.sorted(by: Self.deviceKeyComparator) {
             let info = dict[key]!
             var entry = OrderedJSONObject()
             entry.append("bezel", .number(info.bezel))
             entry.append("name",  .string(info.name))
+            if includeSource {
+                entry.append("source", .string((info.source ?? .simulator).rawValue))
+                if let profileBezel = info.profileBezel {
+                    entry.append("profileBezel", .number(profileBezel))
+                }
+            }
             section.append(key, entry.jsonValue)
         }
         return section.jsonValue

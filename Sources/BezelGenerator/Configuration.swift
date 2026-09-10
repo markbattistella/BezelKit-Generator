@@ -15,8 +15,8 @@ struct BezelGeneratorCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "BezelGenerator",
         abstract: "Tools for generating and documenting BezelKit device data.",
-        version: "3.0.0",
-        subcommands: [GenerateData.self, GenerateDocs.self, TestPipeline.self],
+        version: "3.1.0",
+        subcommands: [GenerateData.self, ScanCommand.self, GenerateDocs.self, TestPipeline.self],
         defaultSubcommand: GenerateData.self
     )
 }
