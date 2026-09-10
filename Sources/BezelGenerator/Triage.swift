@@ -21,7 +21,7 @@ enum TriageVerdict: Sendable {
 
     var reason: String {
         switch self {
-        case .trust(let reason), .verify(let reason): return reason
+            case .trust(let reason), .verify(let reason): return reason
         }
     }
 }
@@ -50,7 +50,6 @@ enum TriageVerdict: Sendable {
 /// profile-derived values were allowed to corroborate each other, one bad reading would
 /// bootstrap itself into looking verified.
 struct Triage {
-
     /// Radii confirmed by an actual simulator boot, grouped by chassis-design ID.
     private let verifiedRadii: [String: Set<Double>]
 
@@ -92,7 +91,8 @@ struct Triage {
 
         let listed = peers.sorted().map { Self.format($0) }.joined(separator: ", ")
         return .verify(
-            reason: "whole value \(Self.format(radius)) conflicts with verified '\(shortChrome(chrome))' radii [\(listed)]"
+            reason:
+                "whole value \(Self.format(radius)) conflicts with verified '\(shortChrome(chrome))' radii [\(listed)]"
         )
     }
 

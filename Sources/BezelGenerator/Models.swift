@@ -26,21 +26,21 @@ struct Metadata: Codable {
     let website: String
 
     enum CodingKeys: String, CodingKey {
-        case author  = "Author"
+        case author = "Author"
         case project = "Project"
         case website = "Website"
     }
 }
 
 struct DeviceCategories: Codable {
-    var iPad:   [String: DeviceInfo]
+    var iPad: [String: DeviceInfo]
     var iPhone: [String: DeviceInfo]
-    var iPod:   [String: DeviceInfo]
+    var iPod: [String: DeviceInfo]
 }
 
 struct DeviceInfo: Codable {
     var bezel: Double
-    var name:  String
+    var name: String
 
     /// How the radius was obtained.
     ///
@@ -69,7 +69,6 @@ struct DeviceInfo: Codable {
 
 /// Where a bezel value came from.
 enum DeviceSource: String, Codable, Sendable {
-
     /// Read from `UIScreen._displayCornerRadius` inside a booted simulator. Ground truth.
     case simulator
 
@@ -91,10 +90,10 @@ enum DeviceCategory: String, Sendable, CaseIterable {
     /// does not cover.
     init?(identifier: String) {
         switch true {
-        case identifier.hasPrefix("iPhone"): self = .iPhone
-        case identifier.hasPrefix("iPad"):   self = .iPad
-        case identifier.hasPrefix("iPod"):   self = .iPod
-        default: return nil
+            case identifier.hasPrefix("iPhone"): self = .iPhone
+            case identifier.hasPrefix("iPad"): self = .iPad
+            case identifier.hasPrefix("iPod"): self = .iPod
+            default: return nil
         }
     }
 }
@@ -103,7 +102,6 @@ enum DeviceCategory: String, Sendable, CaseIterable {
 
 /// One device identifier's entry in the Xcode-installed `.simdevicetype` catalog.
 struct DeviceProfile: Sendable {
-
     /// Model identifier, e.g. `iPhone17,1`.
     let identifier: String
 
@@ -132,9 +130,9 @@ struct SimctlDeviceList: Decodable {
 }
 
 struct SimulatorDevice: Decodable {
-    let name:        String
-    let udid:        String
-    let state:       String
+    let name: String
+    let udid: String
+    let state: String
     let isAvailable: Bool
 }
 
@@ -145,14 +143,14 @@ struct SimctlRuntimeList: Decodable {
 }
 
 struct SimulatorRuntime: Decodable {
-    let version:              String
-    let identifier:           String
-    let isAvailable:          Bool
+    let version: String
+    let identifier: String
+    let isAvailable: Bool
     let supportedDeviceTypes: [SupportedDeviceType]
 }
 
 struct SupportedDeviceType: Decodable {
-    let name:       String
+    let name: String
     let identifier: String
 }
 
@@ -160,7 +158,7 @@ struct SupportedDeviceType: Decodable {
 
 struct AppOutput: Decodable {
     let identifiers: String
-    let bezel:       Double
+    let bezel: Double
 }
 
 // MARK: - Internal resolved simulator work type
@@ -169,16 +167,15 @@ struct AppOutput: Decodable {
 /// Multiple identifiers share a single simulator when they have the same display name
 /// (e.g. iPad17,1 and iPad17,2 are both "iPad Pro 11-inch (M5)" — Wi-Fi vs Cellular).
 struct ResolvedSimulator {
-    let identifiers: [String]   // all device identifiers that share this simulator name
-    let name:        String
-    let udid:        String
-    var bezel:       Double?
+    let identifiers: [String] // all device identifiers that share this simulator name
+    let name: String
+    let udid: String
+    var bezel: Double?
 }
 
 // MARK: - Database convenience access
 
 extension DeviceDatabase {
-
     /// Every processed device across all three categories, keyed by identifier.
     var allDevices: [String: DeviceInfo] {
         var combined = devices.iPhone
@@ -192,18 +189,18 @@ extension DeviceDatabase {
     subscript(identifier: String) -> DeviceInfo? {
         get {
             switch DeviceCategory(identifier: identifier) {
-            case .iPad:   return devices.iPad[identifier]
-            case .iPhone: return devices.iPhone[identifier]
-            case .iPod:   return devices.iPod[identifier]
-            case nil:     return nil
+                case .iPad: return devices.iPad[identifier]
+                case .iPhone: return devices.iPhone[identifier]
+                case .iPod: return devices.iPod[identifier]
+                case nil: return nil
             }
         }
         set {
             switch DeviceCategory(identifier: identifier) {
-            case .iPad:   devices.iPad[identifier]   = newValue
-            case .iPhone: devices.iPhone[identifier] = newValue
-            case .iPod:   devices.iPod[identifier]   = newValue
-            case nil:     break
+                case .iPad: devices.iPad[identifier] = newValue
+                case .iPhone: devices.iPhone[identifier] = newValue
+                case .iPod: devices.iPod[identifier] = newValue
+                case nil: break
             }
         }
     }

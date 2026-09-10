@@ -10,7 +10,6 @@ import Foundation
 
 /// Why a device appears in the scan results.
 enum ScanKind: Sendable {
-
     /// Present in Xcode's catalog but absent from the database.
     case new
 
@@ -20,7 +19,6 @@ enum ScanKind: Sendable {
 
 /// What the scan decided to do about one device.
 enum ScanOutcome: Sendable {
-
     /// Taken from the profile catalog on ``Triage``'s word, without a boot.
     case accepted(source: DeviceSource, value: Double, note: String)
 
@@ -35,29 +33,28 @@ enum ScanOutcome: Sendable {
 
     var writesValue: Bool {
         switch self {
-        case .accepted, .verified: return true
-        case .awaitingVerification, .verificationFailed: return false
+            case .accepted, .verified: return true
+            case .awaitingVerification, .verificationFailed: return false
         }
     }
 }
 
 /// One device's scan result.
 struct ScanEntry: Sendable {
-    let identifier:     String
-    let name:           String
-    let existingValue:  Double?
+    let identifier: String
+    let name: String
+    let existingValue: Double?
     let existingSource: DeviceSource?
-    let profileValue:   Double
-    let kind:           ScanKind
-    let verdict:        TriageVerdict
-    var outcome:        ScanOutcome
+    let profileValue: Double
+    let kind: ScanKind
+    let verdict: TriageVerdict
+    var outcome: ScanOutcome
 }
 
 // MARK: - Scan report
 
 /// The full result of one `scan` run.
 struct ScanReport: Sendable {
-
     /// Devices that are new or whose radius drifted. Devices that agree are counted, not listed.
     var entries: [ScanEntry] = []
 
@@ -75,10 +72,26 @@ struct ScanReport: Sendable {
     /// these are historical entries the catalog cannot speak to.
     var legacyOnlyCount: Int = 0
 
-    var accepted:  [ScanEntry] { entries.filter { if case .accepted  = $0.outcome { return true }; return false } }
-    var verified:  [ScanEntry] { entries.filter { if case .verified  = $0.outcome { return true }; return false } }
-    var awaiting:  [ScanEntry] { entries.filter { if case .awaitingVerification = $0.outcome { return true }; return false } }
-    var failed:    [ScanEntry] { entries.filter { if case .verificationFailed   = $0.outcome { return true }; return false } }
+    var accepted: [ScanEntry] {
+        entries.filter {
+            if case .accepted = $0.outcome { return true }; return false
+        }
+    }
+    var verified: [ScanEntry] {
+        entries.filter {
+            if case .verified = $0.outcome { return true }; return false
+        }
+    }
+    var awaiting: [ScanEntry] {
+        entries.filter {
+            if case .awaitingVerification = $0.outcome { return true }; return false
+        }
+    }
+    var failed: [ScanEntry] {
+        entries.filter {
+            if case .verificationFailed = $0.outcome { return true }; return false
+        }
+    }
 
     var hasChanges: Bool { entries.contains { $0.outcome.writesValue } || !renames.isEmpty }
 
@@ -101,12 +114,12 @@ struct ScanReport: Sendable {
 
         for entry in entries {
             switch entry.outcome {
-            case .awaitingVerification:
-                targets[entry.identifier] = entry.name
-            case .accepted where mode == .unverified:
-                targets[entry.identifier] = entry.name
-            default:
-                break
+                case .awaitingVerification:
+                    targets[entry.identifier] = entry.name
+                case .accepted where mode == .unverified:
+                    targets[entry.identifier] = entry.name
+                default:
+                    break
             }
         }
 
@@ -123,7 +136,6 @@ struct ScanReport: Sendable {
 // MARK: - Markdown rendering
 
 extension ScanReport {
-
     /// A summary suitable for a pull request body or a CI job summary.
     func markdown() -> String {
         var md = "## Device scan\n\n"
@@ -134,14 +146,30 @@ extension ScanReport {
         md += "| Verified by simulator | \(verified.count) |\n"
         md += "| Accepted from Xcode catalog | \(accepted.count) |\n"
         md += "| Awaiting verification | \(awaiting.count) |\n"
-        if !failed.isEmpty  { md += "| Verification failed | \(failed.count) |\n" }
+        if !failed.isEmpty { md += "| Verification failed | \(failed.count) |\n" }
         if !renames.isEmpty { md += "| Name corrections | \(renames.count) |\n" }
         md += "| Legacy (no longer in Xcode) | \(legacyOnlyCount) |\n\n"
 
-        md += section("Verified by simulator boot", verified, note: "Ground truth — read from `UIScreen._displayCornerRadius`.")
-        md += section("Accepted from Xcode catalog", accepted, note: "Trusted without a boot. Re-verified automatically once a runtime is available.")
-        md += section("Awaiting verification", awaiting, note: "**Not written.** A simulator boot is required before these can be accepted.")
-        md += section("Verification failed", failed, note: "A boot was required but could not produce a value. Moved to `problematic` for retry.")
+        md += section(
+            "Verified by simulator boot",
+            verified,
+            note: "Ground truth — read from `UIScreen._displayCornerRadius`."
+        )
+        md += section(
+            "Accepted from Xcode catalog",
+            accepted,
+            note: "Trusted without a boot. Re-verified automatically once a runtime is available."
+        )
+        md += section(
+            "Awaiting verification",
+            awaiting,
+            note: "**Not written.** A simulator boot is required before these can be accepted."
+        )
+        md += section(
+            "Verification failed",
+            failed,
+            note: "A boot was required but could not produce a value. Moved to `problematic` for retry."
+        )
 
         if !renames.isEmpty {
             md += "### Name corrections\n\n| Identifier | Was | Now |\n| --- | --- | --- |\n"
@@ -168,15 +196,15 @@ extension ScanReport {
             let was = entry.existingValue.map { Triage.format($0) } ?? "—"
             let now: String
             switch entry.outcome {
-            case .accepted(_, let value, _), .verified(let value, _):
-                now = Triage.format(value)
-            case .awaitingVerification, .verificationFailed:
-                now = "\(Triage.format(entry.profileValue)) (proposed)"
+                case .accepted(_, let value, _), .verified(let value, _):
+                    now = Triage.format(value)
+                case .awaitingVerification, .verificationFailed:
+                    now = "\(Triage.format(entry.profileValue)) (proposed)"
             }
             let reason: String
             switch entry.outcome {
-            case .accepted(_, _, let note), .verified(_, let note):    reason = note
-            case .awaitingVerification(let note), .verificationFailed(let note): reason = note
+                case .accepted(_, _, let note), .verified(_, let note): reason = note
+                case .awaitingVerification(let note), .verificationFailed(let note): reason = note
             }
             md += "| `\(entry.identifier)` | \(entry.name) | \(was) | \(now) | \(reason) |\n"
         }

@@ -11,7 +11,6 @@ import Foundation
 
 @main
 struct BezelGeneratorCLI: AsyncParsableCommand {
-
     static let configuration = CommandConfiguration(
         commandName: "BezelGenerator",
         abstract: "Tools for generating and documenting BezelKit device data.",
@@ -24,7 +23,6 @@ struct BezelGeneratorCLI: AsyncParsableCommand {
 // MARK: - generate (default subcommand)
 
 struct GenerateData: AsyncParsableCommand {
-
     static let configuration = CommandConfiguration(
         commandName: "generate",
         abstract: "Extracts bezel (corner radius) data from iOS simulators.",

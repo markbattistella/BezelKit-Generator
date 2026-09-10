@@ -11,7 +11,6 @@ import Foundation
 
 /// How aggressively `scan` boots simulators to confirm profile-derived values.
 enum VerificationMode: String, ExpressibleByArgument, CaseIterable, Sendable {
-
     /// Never boot. Report only — useful for a fast local look at what changed.
     case none
 
@@ -28,7 +27,6 @@ enum VerificationMode: String, ExpressibleByArgument, CaseIterable, Sendable {
 // MARK: - scan subcommand
 
 struct ScanCommand: AsyncParsableCommand {
-
     static let configuration = CommandConfiguration(
         commandName: "scan",
         abstract: "Discovers device bezel data from Xcode's device type catalog.",
@@ -53,7 +51,10 @@ struct ScanCommand: AsyncParsableCommand {
     @Option(name: .long, help: ArgumentHelp("Path to the Apple device database JSON file.", valueName: "path"))
     var database: String = "./apple-device-database.json"
 
-    @Option(name: .long, help: ArgumentHelp("Output path for the minified bezel.min.json package resource.", valueName: "path"))
+    @Option(
+        name: .long,
+        help: ArgumentHelp("Output path for the minified bezel.min.json package resource.", valueName: "path")
+    )
     var output: String = "../Sources/BezelKit/Resources/bezel.min.json"
 
     @Option(name: .long, help: ArgumentHelp("Path to the FetchBezel Xcode project.", valueName: "path"))
@@ -72,7 +73,7 @@ struct ScanCommand: AsyncParsableCommand {
         name: .long,
         help: ArgumentHelp(
             "Directory containing .simdevicetype bundles. Repeatable. Defaults to the "
-            + "CoreSimulator profiles directory plus the selected Xcode's platforms.",
+                + "CoreSimulator profiles directory plus the selected Xcode's platforms.",
             valueName: "path"
         )
     )
@@ -103,7 +104,8 @@ struct ScanCommand: AsyncParsableCommand {
         var db = try dbManager.loadDatabase()
 
         logger.info("Reading Xcode device type catalog...")
-        let searchPaths = profilesPath.isEmpty
+        let searchPaths =
+            profilesPath.isEmpty
             ? DeviceProfileCatalog.defaultSearchPaths()
             : profilesPath
         let catalog = DeviceProfileCatalog(logger: logger).load(searchPaths: searchPaths)
@@ -123,13 +125,14 @@ struct ScanCommand: AsyncParsableCommand {
         if !toVerify.isEmpty {
             logger.info("Booting simulators to confirm \(toVerify.count) device(s)...")
             try await runVerification(
-                for:      toVerify,
-                catalog:  catalog,
+                for: toVerify,
+                catalog: catalog,
                 database: db,
-                report:   &report,
-                logger:   logger
+                report: &report,
+                logger: logger
             )
-        } else if verify != .none {
+        }
+        else if verify != .none {
             logger.success("Nothing needs simulator confirmation")
         }
 
@@ -163,14 +166,12 @@ struct ScanCommand: AsyncParsableCommand {
 // MARK: - Building the report
 
 extension ScanCommand {
-
     /// Diffs the catalog against the database and runs every difference past ``Triage``.
     private func buildReport(database db: DeviceDatabase, catalog: [String: DeviceProfile]) -> ScanReport {
         let triage = Triage(database: db, catalog: catalog)
         var report = ScanReport()
 
-        for (identifier, profile) in catalog.sorted(by: { $0.key < $1.key }) {
-            guard profile.category != nil else { continue }
+        for (identifier, profile) in catalog.sorted(by: { $0.key < $1.key }) where profile.category != nil {
             let verdict = triage.verdict(for: profile)
 
             guard let existing = db[identifier] else {
@@ -217,9 +218,11 @@ extension ScanCommand {
                 outcome = .awaitingVerification(
                     "database value is simulator-verified — a boot is required to change it"
                 )
-            } else if verdict.needsVerification {
+            }
+            else if verdict.needsVerification {
                 outcome = .awaitingVerification(verdict.reason)
-            } else {
+            }
+            else {
                 outcome = .accepted(source: .profile, value: profile.cornerRadius, note: verdict.reason)
             }
 

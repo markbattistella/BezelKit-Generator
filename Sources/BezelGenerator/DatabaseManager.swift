@@ -9,14 +9,13 @@ import Foundation
 // MARK: - Database manager
 
 struct DatabaseManager {
-
     let databasePath: String
     let logger: Logger
 
     // MARK: - Read
 
     func loadDatabase() throws -> DeviceDatabase {
-        let url  = URL(fileURLWithPath: databasePath)
+        let url = URL(fileURLWithPath: databasePath)
         let data = try Data(contentsOf: url)
         return try JSONDecoder().decode(DeviceDatabase.self, from: data)
     }
@@ -30,9 +29,7 @@ struct DatabaseManager {
         }
 
         let processed = Set(
-            Array(database.devices.iPad.keys) +
-            Array(database.devices.iPhone.keys) +
-            Array(database.devices.iPod.keys)
+            Array(database.devices.iPad.keys) + Array(database.devices.iPhone.keys) + Array(database.devices.iPod.keys)
         )
 
         return combined.filter { !processed.contains($0.key) }
@@ -71,9 +68,7 @@ struct DatabaseManager {
 
         // Remove from problematic any identifiers now successfully in devices
         let processed = Set(
-            Array(database.devices.iPad.keys) +
-            Array(database.devices.iPhone.keys) +
-            Array(database.devices.iPod.keys)
+            Array(database.devices.iPad.keys) + Array(database.devices.iPhone.keys) + Array(database.devices.iPod.keys)
         )
         database.problematic = database.problematic.filter { !processed.contains($0.key) }
     }
@@ -108,7 +103,8 @@ struct DatabaseManager {
         do {
             try FileManager.default.removeItem(atPath: path)
             logger.log("- Deleted \(path)", indent: 6)
-        } catch {
+        }
+        catch {
             logger.warn("Could not delete '\(path)': \(error.localizedDescription)")
         }
     }
@@ -117,7 +113,6 @@ struct DatabaseManager {
 // MARK: - Custom ordered JSON encoding
 
 extension DatabaseManager {
-
     /// Builds the full JSON string for the database with custom-sorted keys.
     /// When `minify` is true, omits `pending` and `problematic` and produces compact JSON.
     private func buildJSON(_ database: DeviceDatabase, minify: Bool) -> String {
@@ -125,20 +120,20 @@ extension DatabaseManager {
 
         // _metadata
         var meta = OrderedJSONObject()
-        meta.append("Author",  .string(database.metadata.author))
+        meta.append("Author", .string(database.metadata.author))
         meta.append("Project", .string(database.metadata.project))
         meta.append("Website", .string(database.metadata.website))
         root.append("_metadata", meta.jsonValue)
 
         // devices
         var devicesObj = OrderedJSONObject()
-        devicesObj.append("iPad",   deviceSection(database.devices.iPad,   includeSource: !minify))
+        devicesObj.append("iPad", deviceSection(database.devices.iPad, includeSource: !minify))
         devicesObj.append("iPhone", deviceSection(database.devices.iPhone, includeSource: !minify))
-        devicesObj.append("iPod",   deviceSection(database.devices.iPod,   includeSource: !minify))
+        devicesObj.append("iPod", deviceSection(database.devices.iPod, includeSource: !minify))
         root.append("devices", devicesObj.jsonValue)
 
         if !minify {
-            root.append("pending",     pendingSection(database.pending))
+            root.append("pending", pendingSection(database.pending))
             root.append("problematic", pendingSection(database.problematic))
         }
 
@@ -156,7 +151,7 @@ extension DatabaseManager {
             let info = dict[key]!
             var entry = OrderedJSONObject()
             entry.append("bezel", .number(info.bezel))
-            entry.append("name",  .string(info.name))
+            entry.append("name", .string(info.name))
             if includeSource {
                 entry.append("source", .string((info.source ?? .simulator).rawValue))
                 if let profileBezel = info.profileBezel {
@@ -182,7 +177,6 @@ extension DatabaseManager {
 // MARK: - Key sort (replicates Node.js parseFloat(key.match(/\d+(?:,\d+)?/)))
 
 extension DatabaseManager {
-
     /// Extracts the numeric sort value from a device identifier.
     /// Matches Node.js: `parseFloat(a.match(/\d+(?:,\d+)?/))`.
     /// E.g. "iPhone14,1" → match "14,1" → replace comma with "." → Double("14.1") = 14.1
@@ -221,10 +215,10 @@ struct OrderedJSONObject {
     var jsonValue: JSONValue { .object(self) }
 
     func serialize(pretty: Bool, indent: Int) -> String {
-        let i  = pretty ? String(repeating: "  ", count: indent)     : ""
+        let i = pretty ? String(repeating: "  ", count: indent) : ""
         let i1 = pretty ? String(repeating: "  ", count: indent + 1) : ""
         let nl = pretty ? "\n" : ""
-        let sp = pretty ? " "  : ""
+        let sp = pretty ? " " : ""
 
         var out = "{\(nl)"
         for (idx, (key, value)) in pairs.enumerated() {
@@ -240,18 +234,18 @@ struct OrderedJSONObject {
 
 private func serializeValue(_ value: JSONValue, pretty: Bool, indent: Int) -> String {
     switch value {
-    case .string(let s):
-        return jsonEscape(s)
-    case .number(let n):
-        // Whole numbers → no decimal point (matches JSON.stringify behaviour)
-        if n.truncatingRemainder(dividingBy: 1) == 0, !n.isInfinite, !n.isNaN {
-            return String(Int(n))
-        }
-        return String(n)
-    case .object(let obj):
-        return obj.serialize(pretty: pretty, indent: indent)
-    case .null:
-        return "null"
+        case .string(let s):
+            return jsonEscape(s)
+        case .number(let n):
+            // Whole numbers → no decimal point (matches JSON.stringify behaviour)
+            if n.truncatingRemainder(dividingBy: 1) == 0, !n.isInfinite, !n.isNaN {
+                return String(Int(n))
+            }
+            return String(n)
+        case .object(let obj):
+            return obj.serialize(pretty: pretty, indent: indent)
+        case .null:
+            return "null"
     }
 }
 
@@ -259,17 +253,18 @@ private func jsonEscape(_ s: String) -> String {
     var result = "\""
     for scalar in s.unicodeScalars {
         switch scalar {
-        case "\"": result += "\\\""
-        case "\\": result += "\\\\"
-        case "\n": result += "\\n"
-        case "\r": result += "\\r"
-        case "\t": result += "\\t"
-        default:
-            if scalar.value < 0x20 {
-                result += String(format: "\\u%04x", scalar.value)
-            } else {
-                result += String(scalar)
-            }
+            case "\"": result += "\\\""
+            case "\\": result += "\\\\"
+            case "\n": result += "\\n"
+            case "\r": result += "\\r"
+            case "\t": result += "\\t"
+            default:
+                if scalar.value < 0x20 {
+                    result += String(format: "\\u%04x", scalar.value)
+                }
+                else {
+                    result += String(scalar)
+                }
         }
     }
     result += "\""

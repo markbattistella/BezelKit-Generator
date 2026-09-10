@@ -9,7 +9,6 @@ import Foundation
 // MARK: - Simulator verification
 
 extension ScanCommand {
-
     /// Boots simulators for `targets` and folds the measured values back into the report.
     ///
     /// Reuses the same resolve/build/boot machinery as `generate`, so a value confirmed here
@@ -23,18 +22,18 @@ extension ScanCommand {
         logger: Logger
     ) async throws {
         let runner = SimulatorRunner(
-            logger:      logger,
-            bundleId:    bundleId,
+            logger: logger,
+            bundleId: bundleId,
             projectPath: project,
-            scheme:      scheme,
-            appOutput:   appOutput
+            scheme: scheme,
+            appOutput: appOutput
         )
 
         let pending = targets.mapValues { PendingDeviceInfo(name: $0) }
         let (found, unfound) = try runner.resolveSimulators(from: pending)
 
         var processed: [ResolvedSimulator] = []
-        var failed:    [ResolvedSimulator] = []
+        var failed: [ResolvedSimulator] = []
 
         if !found.isEmpty {
             (processed, failed) = try await runner.generateBezelData(for: found)
@@ -85,11 +84,12 @@ extension ScanCommand {
             // because no runtime happened to be installed to double-check it. Fall back to
             // the triage decision rather than dropping the device on the floor.
             if case .verificationFailed(let note) = outcome,
-               case .trust(let reason) = report.entries[index].verdict {
+                case .trust(let reason) = report.entries[index].verdict
+            {
                 outcome = .accepted(
                     source: .profile,
-                    value:  report.entries[index].profileValue,
-                    note:   "\(reason) — \(note), so accepted without confirmation"
+                    value: report.entries[index].profileValue,
+                    note: "\(reason) — \(note), so accepted without confirmation"
                 )
             }
             report.entries[index].outcome = outcome
@@ -106,22 +106,23 @@ extension ScanCommand {
         // Only worth reporting if the boot actually changed something — either the value
         // moved, or a profile-derived entry was promoted to simulator-verified.
         if case .verified(let value, _) = outcome,
-           let existing,
-           abs(existing.bezel - value) < 0.005,
-           existing.isRuntimeVerified {
+            let existing,
+            abs(existing.bezel - value) < 0.005,
+            existing.isRuntimeVerified
+        {
             return
         }
 
         report.entries.append(
             ScanEntry(
-                identifier:     identifier,
-                name:           measuredName,
-                existingValue:  existing?.bezel,
+                identifier: identifier,
+                name: measuredName,
+                existingValue: existing?.bezel,
                 existingSource: existing?.source ?? (existing != nil ? .simulator : nil),
-                profileValue:   profile.cornerRadius,
-                kind:           existing == nil ? .new : .drift,
-                verdict:        .trust(reason: "re-verified"),
-                outcome:        outcome
+                profileValue: profile.cornerRadius,
+                kind: existing == nil ? .new : .drift,
+                verdict: .trust(reason: "re-verified"),
+                outcome: outcome
             )
         )
     }
@@ -130,29 +131,28 @@ extension ScanCommand {
 // MARK: - Applying outcomes
 
 extension ScanCommand {
-
     /// Writes accepted and verified values into the database, corrects names, and parks
     /// anything still unconfirmed in `problematic` so later runs retry it.
     func applyOutcomes(report: ScanReport, into database: inout DeviceDatabase) {
         for entry in report.entries {
             switch entry.outcome {
-            case .accepted(let source, let value, _):
-                database[entry.identifier] = DeviceInfo(bezel: value, name: entry.name, source: source)
-                database.problematic.removeValue(forKey: entry.identifier)
+                case .accepted(let source, let value, _):
+                    database[entry.identifier] = DeviceInfo(bezel: value, name: entry.name, source: source)
+                    database.problematic.removeValue(forKey: entry.identifier)
 
-            case .verified(let value, _):
-                database[entry.identifier] = DeviceInfo(
-                    bezel:        value,
-                    name:         entry.name,
-                    source:       .simulator,
-                    profileBezel: entry.profileValue
-                )
-                database.problematic.removeValue(forKey: entry.identifier)
+                case .verified(let value, _):
+                    database[entry.identifier] = DeviceInfo(
+                        bezel: value,
+                        name: entry.name,
+                        source: .simulator,
+                        profileBezel: entry.profileValue
+                    )
+                    database.problematic.removeValue(forKey: entry.identifier)
 
-            case .awaitingVerification, .verificationFailed:
-                if database[entry.identifier] == nil {
-                    database.problematic[entry.identifier] = PendingDeviceInfo(name: entry.name)
-                }
+                case .awaitingVerification, .verificationFailed:
+                    if database[entry.identifier] == nil {
+                        database.problematic[entry.identifier] = PendingDeviceInfo(name: entry.name)
+                    }
             }
         }
 
@@ -168,7 +168,6 @@ extension ScanCommand {
 // MARK: - Console rendering
 
 extension ScanCommand {
-
     func render(report: ScanReport, logger: Logger) {
         logger.banner("** Scan results **")
 
@@ -180,7 +179,7 @@ extension ScanCommand {
         describe(report.verified, "Verified by simulator", logger: logger, success: true)
         describe(report.accepted, "Accepted from Xcode catalog", logger: logger, success: true)
         describe(report.awaiting, "Needs a simulator boot", logger: logger, success: false)
-        describe(report.failed,   "Verification failed", logger: logger, success: false)
+        describe(report.failed, "Verification failed", logger: logger, success: false)
 
         if !report.renames.isEmpty {
             logger.info("Name corrections: \(report.renames.count)", indent: 2)
@@ -199,7 +198,8 @@ extension ScanCommand {
 
         if success {
             logger.success("\(title): \(entries.count)", indent: 2)
-        } else {
+        }
+        else {
             logger.warn("\(title): \(entries.count)", indent: 2)
         }
 
@@ -207,8 +207,8 @@ extension ScanCommand {
             let was = entry.existingValue.map { "\(Triage.format($0)) → " } ?? ""
             let now: String
             switch entry.outcome {
-            case .accepted(_, let value, _), .verified(let value, _): now = Triage.format(value)
-            case .awaitingVerification, .verificationFailed:          now = "\(Triage.format(entry.profileValue))?"
+                case .accepted(_, let value, _), .verified(let value, _): now = Triage.format(value)
+                case .awaitingVerification, .verificationFailed: now = "\(Triage.format(entry.profileValue))?"
             }
             logger.log("- \(entry.identifier) (\(entry.name)): \(was)\(now)", indent: 6)
             logger.log("  \(entry.outcome.detail)", indent: 6)
@@ -219,14 +219,13 @@ extension ScanCommand {
 // MARK: - Outcome detail
 
 extension ScanOutcome {
-
     var detail: String {
         switch self {
-        case .accepted(_, _, let note),
-             .verified(_, let note),
-             .awaitingVerification(let note),
-             .verificationFailed(let note):
-            return note
+            case .accepted(_, _, let note),
+                .verified(_, let note),
+                .awaitingVerification(let note),
+                .verificationFailed(let note):
+                return note
         }
     }
 }

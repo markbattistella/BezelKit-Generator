@@ -21,7 +21,6 @@ import Foundation
 /// milliseconds rather than one simulator boot per device. It is not a perfect substitute
 /// for the runtime value — see ``Triage`` for the cases where it is known to drift.
 struct DeviceProfileCatalog {
-
     let logger: Logger
 
     /// Locations searched for `.simdevicetype` bundles, in order.
@@ -36,7 +35,7 @@ struct DeviceProfileCatalog {
             for platform in ["iPhoneOS", "iPadOS"] {
                 paths.append(
                     "\(developerDir)/Platforms/\(platform).platform/Library/Developer"
-                    + "/CoreSimulator/Profiles/DeviceTypes"
+                        + "/CoreSimulator/Profiles/DeviceTypes"
                 )
             }
         }
@@ -70,18 +69,19 @@ struct DeviceProfileCatalog {
                     // A later search path wins, but a genuine value conflict is worth surfacing
                     // rather than silently resolving.
                     if let existing = catalog[identifier],
-                       abs(existing.cornerRadius - profile.cornerRadius) > 0.0001 {
+                        abs(existing.cornerRadius - profile.cornerRadius) > 0.0001
+                    {
                         logger.warn(
                             "Conflicting radius for \(identifier): "
-                            + "\(existing.cornerRadius) (\(existing.simulatorName)) vs "
-                            + "\(profile.cornerRadius) (\(profile.simulatorName))"
+                                + "\(existing.cornerRadius) (\(existing.simulatorName)) vs "
+                                + "\(profile.cornerRadius) (\(profile.simulatorName))"
                         )
                     }
 
                     catalog[identifier] = DeviceProfile(
-                        identifier:       identifier,
-                        simulatorName:    profile.simulatorName,
-                        cornerRadius:     profile.cornerRadius,
+                        identifier: identifier,
+                        simulatorName: profile.simulatorName,
+                        cornerRadius: profile.cornerRadius,
                         chromeIdentifier: profile.chromeIdentifier
                     )
                 }
@@ -95,9 +95,9 @@ struct DeviceProfileCatalog {
     // MARK: - Bundle parsing
 
     private struct ParsedBundle {
-        let identifiers:      [String]
-        let simulatorName:    String
-        let cornerRadius:     Double
+        let identifiers: [String]
+        let simulatorName: String
+        let cornerRadius: Double
         let chromeIdentifier: String?
     }
 
@@ -105,7 +105,7 @@ struct DeviceProfileCatalog {
         let resources = "\(bundlePath)/Contents/Resources"
 
         guard let profile = readPlist(at: "\(resources)/profile.plist"),
-              let capabilities = readPlist(at: "\(resources)/capabilities.plist")
+            let capabilities = readPlist(at: "\(resources)/capabilities.plist")
         else { return nil }
 
         // `capabilities.plist` nests everything under a `capabilities` dictionary in current
@@ -119,9 +119,11 @@ struct DeviceProfileCatalog {
         let identifiers: [String]
         if let represented = profile["representedModelIdentifiers"] as? [String], !represented.isEmpty {
             identifiers = represented
-        } else if let single = profile["modelIdentifier"] as? String {
+        }
+        else if let single = profile["modelIdentifier"] as? String {
             identifiers = [single]
-        } else {
+        }
+        else {
             return nil
         }
 
@@ -130,9 +132,9 @@ struct DeviceProfileCatalog {
             .lastPathComponent
 
         return ParsedBundle(
-            identifiers:      identifiers,
-            simulatorName:    name,
-            cornerRadius:     radius,
+            identifiers: identifiers,
+            simulatorName: name,
+            cornerRadius: radius,
             chromeIdentifier: profile["chromeIdentifier"] as? String
         )
     }
