@@ -415,7 +415,7 @@
       },
       "iPad14,4": {
         "bezel": 18,
-        "name": "iPad Pro (11-inch) (4th generation) (16GB)",
+        "name": "iPad Pro (11-inch) (4th generation)",
         "source": "simulator"
       },
       "iPad14,5": {
@@ -873,6 +873,12 @@
         "bezel": 62,
         "name": "iPhone 18 Pro Max",
         "source": "profile"
+      },
+      "iPhone19,4": {
+        "bezel": 59,
+        "name": "iPhone Duo",
+        "source": "simulator",
+        "profileBezel": 59
       },
       "iPhone19,7": {
         "bezel": 62,
