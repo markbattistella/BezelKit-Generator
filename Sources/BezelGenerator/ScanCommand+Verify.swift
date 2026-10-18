@@ -213,13 +213,19 @@ extension ScanCommand {
                 for screen in screens {
                     let c = screen.corners
                     let size = screen.nativeSize.map { Triage.format($0) }.joined(separator: "×")
-                    logger.log("  \(screen.name ?? "screen") \(size)px: TL \(Triage.format(c.topLeft)) TR \(Triage.format(c.topRight)) BL \(Triage.format(c.bottomLeft)) BR \(Triage.format(c.bottomRight))", indent: 6)
+                    logger.log(
+                        "  \(screen.name ?? "screen") \(size)px: TL \(Triage.format(c.topLeft)) TR \(Triage.format(c.topRight)) BL \(Triage.format(c.bottomLeft)) BR \(Triage.format(c.bottomRight))",
+                        indent: 6
+                    )
                 }
             }
         }
 
         if !report.incompleteScreenDevices.isEmpty {
-            logger.warn("Multi-screen device(s) found without per-screen data: \(report.incompleteScreenDevices.count)", indent: 2)
+            logger.warn(
+                "Multi-screen device(s) found without per-screen data: \(report.incompleteScreenDevices.count)",
+                indent: 2
+            )
             for device in report.incompleteScreenDevices {
                 logger.log("- \(device.identifier) (\(device.name))", indent: 6)
             }
@@ -228,7 +234,9 @@ extension ScanCommand {
             logger.log("and add a 'screens' entry (see MAINTAINING.md).", indent: 6)
         }
 
-        if !report.hasChanges && report.awaiting.isEmpty && report.failed.isEmpty && report.incompleteScreenDevices.isEmpty {
+        if !report.hasChanges && report.awaiting.isEmpty && report.failed.isEmpty
+            && report.incompleteScreenDevices.isEmpty
+        {
             logger.success("Database matches Xcode's device catalog 🎉", indent: 2)
         }
     }

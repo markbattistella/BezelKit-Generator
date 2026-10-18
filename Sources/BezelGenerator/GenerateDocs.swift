@@ -10,7 +10,6 @@ import Foundation
 // MARK: - generate-docs subcommand
 
 struct GenerateDocs: ParsableCommand {
-
     static let configuration = CommandConfiguration(
         commandName: "generate-docs",
         abstract: "Generates SupportedDeviceList.md from the minified bezel.min.json resource.",
@@ -78,9 +77,9 @@ struct GenerateDocs: ParsableCommand {
         md += "Below is the current supported list of devices `BezelKit` can return data for.\n\n"
 
         let categories: [(String, [String: DeviceInfo])] = [
-            ("iPad",   json.devices.iPad),
+            ("iPad", json.devices.iPad),
             ("iPhone", json.devices.iPhone),
-            ("iPod",   json.devices.iPod)
+            ("iPod", json.devices.iPod),
         ]
 
         for (category, devices) in categories {
@@ -93,13 +92,15 @@ struct GenerateDocs: ParsableCommand {
         md += buildMultiScreenSection(categories.flatMap { $0.1 })
 
         md += "---\n\n"
-        let authorCell  = "[\(json.metadata.author)](\(json.metadata.website))"
+        let authorCell = "[\(json.metadata.author)](\(json.metadata.website))"
         let projectCell = json.metadata.project
-        let col1 = max("Author".count,  authorCell.count)
+        let col1 = max("Author".count, authorCell.count)
         let col2 = max("Project".count, projectCell.count)
-        md += "| \("Author".padding(toLength: col1, withPad: " ", startingAt: 0)) | \("Project".padding(toLength: col2, withPad: " ", startingAt: 0)) |\n"
+        md +=
+            "| \("Author".padding(toLength: col1, withPad: " ", startingAt: 0)) | \("Project".padding(toLength: col2, withPad: " ", startingAt: 0)) |\n"
         md += "| \(String(repeating: "-", count: col1)) | \(String(repeating: "-", count: col2)) |\n"
-        md += "| \(authorCell.padding(toLength: col1, withPad: " ", startingAt: 0)) | \(projectCell.padding(toLength: col2, withPad: " ", startingAt: 0)) |\n"
+        md +=
+            "| \(authorCell.padding(toLength: col1, withPad: " ", startingAt: 0)) | \(projectCell.padding(toLength: col2, withPad: " ", startingAt: 0)) |\n"
 
         return md.trimmingCharacters(in: .whitespacesAndNewlines) + "\n"
     }
@@ -109,7 +110,8 @@ struct GenerateDocs: ParsableCommand {
     /// The main table can only show one number per device, so these devices get a second
     /// table with each screen's four physical corners (portrait-up).
     private func buildMultiScreenSection(_ devices: [(key: String, value: DeviceInfo)]) -> String {
-        let rows: [[String]] = devices
+        let rows: [[String]] =
+            devices
             .filter { !($0.value.screens ?? []).isEmpty }
             .sorted { DatabaseManager.deviceKeyComparator($0.key, $1.key) }
             .flatMap { id, device in
@@ -122,20 +124,27 @@ struct GenerateDocs: ParsableCommand {
                         formatBezel(screen.corners.topLeft),
                         formatBezel(screen.corners.topRight),
                         formatBezel(screen.corners.bottomLeft),
-                        formatBezel(screen.corners.bottomRight)
+                        formatBezel(screen.corners.bottomRight),
                     ]
                 }
             }
         guard !rows.isEmpty else { return "" }
 
-        let headers = ["Device", "Model Identifier", "Screen", "Native Size (px)", "Top Left", "Top Right", "Bottom Left", "Bottom Right"]
+        let headers = [
+            "Device", "Model Identifier", "Screen", "Native Size (px)", "Top Left", "Top Right", "Bottom Left",
+            "Bottom Right",
+        ]
         let widths = headers.indices.map { c in rows.reduce(headers[c].count) { max($0, $1[c].count) } }
         func line(_ cells: [String]) -> String {
-            "| " + cells.indices.map { cells[$0].padding(toLength: widths[$0], withPad: " ", startingAt: 0) }.joined(separator: " | ") + " |\n"
+            "| "
+                + cells.indices.map { cells[$0].padding(toLength: widths[$0], withPad: " ", startingAt: 0) }.joined(
+                    separator: " | "
+                ) + " |\n"
         }
 
         var md = "## Multi-screen devices\n\n"
-        md += "These devices have screens with different corner radii. `BezelKit` picks the active screen and rotates its corners to match the interface orientation. Values are the physical corners with the device held upright (portrait), in points.\n\n"
+        md +=
+            "These devices have screens with different corner radii. `BezelKit` picks the active screen and rotates its corners to match the interface orientation. Values are the physical corners with the device held upright (portrait), in points.\n\n"
         md += line(headers)
         md += "| " + widths.map { String(repeating: "-", count: $0) }.joined(separator: " | ") + " |\n"
         for row in rows { md += line(row) }
@@ -153,9 +162,9 @@ struct GenerateDocs: ParsableCommand {
         }
 
         // Compute column widths: max of header vs. each data cell
-        let w1 = rows.reduce("Device".count)           { max($0, $1.col1.count) }
+        let w1 = rows.reduce("Device".count) { max($0, $1.col1.count) }
         let w2 = rows.reduce("Model Identifier".count) { max($0, $1.col2.count) }
-        let w3 = rows.reduce("Bezel Size".count)       { max($0, $1.col3.count) }
+        let w3 = rows.reduce("Bezel Size".count) { max($0, $1.col3.count) }
 
         func pad(_ s: String, _ w: Int) -> String {
             s.padding(toLength: w, withPad: " ", startingAt: 0)
@@ -163,7 +172,8 @@ struct GenerateDocs: ParsableCommand {
 
         var table = ""
         table += "| \(pad("Device", w1)) | \(pad("Model Identifier", w2)) | \(pad("Bezel Size", w3)) |\n"
-        table += "| \(String(repeating: "-", count: w1)) | \(String(repeating: "-", count: w2)) | \(String(repeating: "-", count: w3)) |\n"
+        table +=
+            "| \(String(repeating: "-", count: w1)) | \(String(repeating: "-", count: w2)) | \(String(repeating: "-", count: w3)) |\n"
         for row in rows {
             table += "| \(pad(row.col1, w1)) | \(pad(row.col2, w2)) | \(pad(row.col3, w3)) |\n"
         }
@@ -186,7 +196,7 @@ struct GenerateDocs: ParsableCommand {
 /// type rather than the full `DeviceDatabase`.
 private struct BezelMinJSON: Decodable {
     let metadata: Metadata
-    let devices:  DeviceCategories
+    let devices: DeviceCategories
 
     enum CodingKeys: String, CodingKey {
         case metadata = "_metadata"

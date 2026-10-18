@@ -181,8 +181,10 @@ extension ScanReport {
         )
 
         if !screenUpdates.isEmpty {
-            md += "### Per-screen corners\n\nRead from Xcode's device profile. Physical corners with the device upright, in points.\n\n"
-            md += "| Identifier | Device | Screen | Native size | TL | TR | BL | BR |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n"
+            md +=
+                "### Per-screen corners\n\nRead from Xcode's device profile. Physical corners with the device upright, in points.\n\n"
+            md +=
+                "| Identifier | Device | Screen | Native size | TL | TR | BL | BR |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n"
             for update in screenUpdates {
                 guard let screens = update.screens else {
                     md += "| `\(update.identifier)` | \(update.name) | removed | | | | | |\n"
@@ -191,7 +193,8 @@ extension ScanReport {
                 for screen in screens {
                     let size = screen.nativeSize.map { Triage.format($0) }.joined(separator: " × ")
                     let c = screen.corners
-                    md += "| `\(update.identifier)` | \(update.name) | \(screen.name ?? "") | \(size) | \(Triage.format(c.topLeft)) | \(Triage.format(c.topRight)) | \(Triage.format(c.bottomLeft)) | \(Triage.format(c.bottomRight)) |\n"
+                    md +=
+                        "| `\(update.identifier)` | \(update.name) | \(screen.name ?? "") | \(size) | \(Triage.format(c.topLeft)) | \(Triage.format(c.topRight)) | \(Triage.format(c.bottomLeft)) | \(Triage.format(c.bottomRight)) |\n"
                 }
             }
             md += "\n"
@@ -199,7 +202,8 @@ extension ScanReport {
 
         if !incompleteScreenDevices.isEmpty {
             md += "### ⚠️ Multi-screen devices without per-screen data\n\n"
-            md += "Xcode lists more than one built-in screen for these devices but not enough to read each screen's corners. "
+            md +=
+                "Xcode lists more than one built-in screen for these devices but not enough to read each screen's corners. "
             md += "Only the single radius was recorded, which is wrong for at least one screen. "
             md += "Measure them by hand — see `MAINTAINING.md`.\n\n"
             md += "| Identifier | Device |\n| --- | --- |\n"

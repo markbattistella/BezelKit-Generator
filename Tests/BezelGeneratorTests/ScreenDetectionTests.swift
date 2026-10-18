@@ -15,7 +15,6 @@ import Testing
 /// per display, with `displayType` telling built-in screens from external ones.
 @Suite(.serialized)
 struct ScreenDetectionTests {
-
     // MARK: - Fixtures
 
     private static func display(
@@ -170,11 +169,23 @@ struct ScreenDetectionTests {
     @Test("A name already stored for a screen of the same size is kept")
     func namesAreKept() {
         let fresh = [
-            ScreenInfo(name: "Screen 1", nativeSize: [1398, 2034], corners: .init(topLeft: 8, topRight: 59, bottomLeft: 8, bottomRight: 59)),
-            ScreenInfo(name: "Screen 2", nativeSize: [2007, 2853], corners: .init(topLeft: 55, topRight: 55, bottomLeft: 55, bottomRight: 55)),
+            ScreenInfo(
+                name: "Screen 1",
+                nativeSize: [1398, 2034],
+                corners: .init(topLeft: 8, topRight: 59, bottomLeft: 8, bottomRight: 59)
+            ),
+            ScreenInfo(
+                name: "Screen 2",
+                nativeSize: [2007, 2853],
+                corners: .init(topLeft: 55, topRight: 55, bottomLeft: 55, bottomRight: 55)
+            ),
         ]
         let stored = [
-            ScreenInfo(name: "Outer", nativeSize: [1398, 2034], corners: .init(topLeft: 1, topRight: 1, bottomLeft: 1, bottomRight: 1))
+            ScreenInfo(
+                name: "Outer",
+                nativeSize: [1398, 2034],
+                corners: .init(topLeft: 1, topRight: 1, bottomLeft: 1, bottomRight: 1)
+            )
         ]
 
         let merged = ScanCommand.mergingNames(fresh, from: stored)
