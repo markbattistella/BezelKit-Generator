@@ -90,6 +90,8 @@ struct GenerateDocs: ParsableCommand {
             md += "\n"
         }
 
+        md += buildMultiScreenSection(categories.flatMap { $0.1 })
+
         md += "---\n\n"
         let authorCell  = "[\(json.metadata.author)](\(json.metadata.website))"
         let projectCell = json.metadata.project
@@ -100,6 +102,44 @@ struct GenerateDocs: ParsableCommand {
         md += "| \(authorCell.padding(toLength: col1, withPad: " ", startingAt: 0)) | \(projectCell.padding(toLength: col2, withPad: " ", startingAt: 0)) |\n"
 
         return md.trimmingCharacters(in: .whitespacesAndNewlines) + "\n"
+    }
+
+    /// Lists per-screen corner radii for devices whose display is not one uniform shape.
+    ///
+    /// The main table can only show one number per device, so these devices get a second
+    /// table with each screen's four physical corners (portrait-up).
+    private func buildMultiScreenSection(_ devices: [(key: String, value: DeviceInfo)]) -> String {
+        let rows: [[String]] = devices
+            .filter { !($0.value.screens ?? []).isEmpty }
+            .sorted { DatabaseManager.deviceKeyComparator($0.key, $1.key) }
+            .flatMap { id, device in
+                (device.screens ?? []).map { screen in
+                    [
+                        device.name,
+                        "`\(id)`",
+                        screen.name ?? "",
+                        screen.nativeSize.map { formatBezel($0) }.joined(separator: " × "),
+                        formatBezel(screen.corners.topLeft),
+                        formatBezel(screen.corners.topRight),
+                        formatBezel(screen.corners.bottomLeft),
+                        formatBezel(screen.corners.bottomRight)
+                    ]
+                }
+            }
+        guard !rows.isEmpty else { return "" }
+
+        let headers = ["Device", "Model Identifier", "Screen", "Native Size (px)", "Top Left", "Top Right", "Bottom Left", "Bottom Right"]
+        let widths = headers.indices.map { c in rows.reduce(headers[c].count) { max($0, $1[c].count) } }
+        func line(_ cells: [String]) -> String {
+            "| " + cells.indices.map { cells[$0].padding(toLength: widths[$0], withPad: " ", startingAt: 0) }.joined(separator: " | ") + " |\n"
+        }
+
+        var md = "## Multi-screen devices\n\n"
+        md += "These devices have screens with different corner radii. `BezelKit` picks the active screen and rotates its corners to match the interface orientation. Values are the physical corners with the device held upright (portrait), in points.\n\n"
+        md += line(headers)
+        md += "| " + widths.map { String(repeating: "-", count: $0) }.joined(separator: " | ") + " |\n"
+        for row in rows { md += line(row) }
+        return md + "\n"
     }
 
     /// Builds a padded, markdownlint-compliant table for one device category.

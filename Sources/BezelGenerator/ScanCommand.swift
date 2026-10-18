@@ -151,7 +151,9 @@ struct ScanCommand: AsyncParsableCommand {
             return
         }
 
-        guard report.hasChanges else {
+        // Hand-edited entries, such as a device's per-screen corners, change what ships without
+        // changing anything a scan can see, so also write when the output has fallen behind.
+        guard report.hasChanges || dbManager.minifiedOutputIsStale(database: db, path: output) else {
             logger.success("Database already up to date 🎉")
             return
         }
@@ -164,6 +166,25 @@ struct ScanCommand: AsyncParsableCommand {
 }
 
 // MARK: - Building the report
+
+extension ScanCommand {
+    /// The catalog's screens carrying over any label already stored for a screen of the same
+    /// size. Returns `nil` for an empty list so devices without per-screen data stay without.
+    static func mergingNames(_ screens: [ScreenInfo], from existing: [ScreenInfo]?) -> [ScreenInfo]? {
+        guard !screens.isEmpty else { return nil }
+
+        func key(_ size: [Double]) -> [Double] { size.sorted() }
+        return screens.map { screen in
+            var merged = screen
+            if let match = existing?.first(where: { key($0.nativeSize) == key(screen.nativeSize) }),
+                let name = match.name
+            {
+                merged.name = name
+            }
+            return merged
+        }
+    }
+}
 
 extension ScanCommand {
     /// Diffs the catalog against the database and runs every difference past ``Triage``.
@@ -238,6 +259,25 @@ extension ScanCommand {
                     outcome: outcome
                 )
             )
+        }
+
+        // Per-screen corners come straight from the catalog, which is authoritative for any
+        // device it still ships. Names already in the database are kept, so a hand-written
+        // label such as "Outer" survives while the numbers stay Xcode's.
+        for (identifier, profile) in catalog.sorted(by: { $0.key < $1.key }) where profile.category != nil {
+            let current = db[identifier]?.screens
+            let desired = Self.mergingNames(profile.screens, from: current)
+
+            if (desired ?? []) != (current ?? []) {
+                report.screenUpdates.append((identifier, profile.simulatorName, desired))
+            }
+
+            // Xcode says there is more than one screen but won't say what they look like. Keep
+            // anything already in the database rather than overwrite it with nothing.
+            if profile.hasIncompleteScreenData {
+                report.screenUpdates.removeAll { $0.identifier == identifier }
+                report.incompleteScreenDevices.append((identifier, profile.simulatorName))
+            }
         }
 
         report.legacyOnlyCount = db.allDevices.keys.filter { catalog[$0] == nil }.count

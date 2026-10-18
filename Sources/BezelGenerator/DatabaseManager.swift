@@ -47,9 +47,13 @@ struct DatabaseManager {
     func merge(results: [ResolvedSimulator], into database: inout DeviceDatabase) {
         for sim in results {
             guard let bezel = sim.bezel else { continue }
-            let info = DeviceInfo(bezel: bezel, name: sim.name, source: .simulator)
             for identifier in sim.identifiers {
-                database[identifier] = info
+                database[identifier] = DeviceInfo(
+                    bezel: bezel,
+                    name: sim.name,
+                    source: .simulator,
+                    screens: database[identifier]?.screens
+                )
             }
         }
     }
@@ -97,6 +101,12 @@ struct DatabaseManager {
         logger.log("- \(minifiedOutputPath)", indent: 6)
     }
 
+    /// Whether the shipped minified JSON differs from what `database` would produce.
+    func minifiedOutputIsStale(database: DeviceDatabase, path: String) -> Bool {
+        let current = try? String(contentsOfFile: path, encoding: .utf8)
+        return current != buildJSON(database, minify: true)
+    }
+
     // MARK: - Delete build directory
 
     func deleteOutputDirectory(_ path: String) {
@@ -115,7 +125,7 @@ struct DatabaseManager {
 extension DatabaseManager {
     /// Builds the full JSON string for the database with custom-sorted keys.
     /// When `minify` is true, omits `pending` and `problematic` and produces compact JSON.
-    private func buildJSON(_ database: DeviceDatabase, minify: Bool) -> String {
+    fileprivate func buildJSON(_ database: DeviceDatabase, minify: Bool) -> String {
         var root = OrderedJSONObject()
 
         // _metadata
@@ -158,9 +168,25 @@ extension DatabaseManager {
                     entry.append("profileBezel", .number(profileBezel))
                 }
             }
+            if let screens = info.screens, !screens.isEmpty {
+                entry.append("screens", .array(screens.map(screenValue)))
+            }
             section.append(key, entry.jsonValue)
         }
         return section.jsonValue
+    }
+
+    private func screenValue(_ screen: ScreenInfo) -> JSONValue {
+        var obj = OrderedJSONObject()
+        if let name = screen.name { obj.append("name", .string(name)) }
+        obj.append("nativeSize", .array(screen.nativeSize.map { .number($0) }))
+        var corners = OrderedJSONObject()
+        corners.append("topLeft", .number(screen.corners.topLeft))
+        corners.append("topRight", .number(screen.corners.topRight))
+        corners.append("bottomLeft", .number(screen.corners.bottomLeft))
+        corners.append("bottomRight", .number(screen.corners.bottomRight))
+        obj.append("corners", corners.jsonValue)
+        return obj.jsonValue
     }
 
     private func pendingSection(_ dict: [String: PendingDeviceInfo]) -> JSONValue {
@@ -202,6 +228,7 @@ enum JSONValue {
     case string(String)
     case number(Double)
     case object(OrderedJSONObject)
+    case array([JSONValue])
     case null
 }
 
@@ -244,6 +271,14 @@ private func serializeValue(_ value: JSONValue, pretty: Bool, indent: Int) -> St
             return String(n)
         case .object(let obj):
             return obj.serialize(pretty: pretty, indent: indent)
+        case .array(let items):
+            guard pretty else {
+                return "[" + items.map { serializeValue($0, pretty: false, indent: 0) }.joined(separator: ",") + "]"
+            }
+            let i = String(repeating: "  ", count: indent)
+            let i1 = String(repeating: "  ", count: indent + 1)
+            let body = items.map { i1 + serializeValue($0, pretty: true, indent: indent + 1) }.joined(separator: ",\n")
+            return "[\n\(body)\n\(i)]"
         case .null:
             return "null"
     }

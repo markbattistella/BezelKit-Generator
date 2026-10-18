@@ -82,7 +82,9 @@ struct DeviceProfileCatalog {
                         identifier: identifier,
                         simulatorName: profile.simulatorName,
                         cornerRadius: profile.cornerRadius,
-                        chromeIdentifier: profile.chromeIdentifier
+                        chromeIdentifier: profile.chromeIdentifier,
+                        screens: profile.screens,
+                        hasIncompleteScreenData: profile.hasIncompleteScreenData
                     )
                 }
             }
@@ -94,14 +96,69 @@ struct DeviceProfileCatalog {
 
     // MARK: - Bundle parsing
 
-    private struct ParsedBundle {
+    struct ParsedBundle {
         let identifiers: [String]
         let simulatorName: String
         let cornerRadius: Double
         let chromeIdentifier: String?
+        let screens: [ScreenInfo]
+        let hasIncompleteScreenData: Bool
     }
 
-    private func parseBundle(at bundlePath: String) -> ParsedBundle? {
+    /// The built-in screens of a device, or `[]` when one radius already describes it.
+    ///
+    /// Xcode lists every display a device type has, including external ones such as CarPlay, so
+    /// only `integrated` displays count. A device needs per-screen data when it has more than
+    /// one of them or when any one has uneven corners — a single-screen device with uniform
+    /// corners, which is almost all of them, is left to the scalar radius.
+    ///
+    /// When there is more than one built-in screen but one is missing its size or corners, the
+    /// data can't be trusted as a set, so nothing is recorded and the device is flagged instead.
+    func parseScreens(_ caps: [String: Any]) -> (screens: [ScreenInfo], incomplete: Bool) {
+        let displays = (caps["displays"] as? [[String: Any]]) ?? []
+        let integrated = displays.filter { ($0["displayType"] as? String) == "integrated" }
+
+        let screens: [ScreenInfo] = integrated.compactMap { display in
+            func number(_ key: String) -> Double? { (display[key] as? NSNumber)?.doubleValue }
+
+            guard
+                let width = number("width"), let height = number("height"),
+                let topLeft = number("cornerRadiusUL"), let topRight = number("cornerRadiusUR"),
+                let bottomLeft = number("cornerRadiusLL"), let bottomRight = number("cornerRadiusLR")
+            else { return nil }
+
+            return ScreenInfo(
+                name: nil,
+                nativeSize: [width, height],
+                corners: .init(
+                    topLeft: topLeft,
+                    topRight: topRight,
+                    bottomLeft: bottomLeft,
+                    bottomRight: bottomRight
+                )
+            )
+        }
+
+        // More screens than we could read: don't record half a device.
+        if integrated.count > 1, screens.count < integrated.count {
+            return ([], true)
+        }
+
+        // Xcode doesn't label them, so number them in its order. A name already stored in the
+        // database for a screen of the same size takes precedence — see `mergingNames`.
+        let named = screens.enumerated().map { index, screen -> ScreenInfo in
+            var screen = screen
+            screen.name = "Screen \(index + 1)"
+            return screen
+        }
+
+        let uneven = screens.contains {
+            Set([$0.corners.topLeft, $0.corners.topRight, $0.corners.bottomLeft, $0.corners.bottomRight]).count > 1
+        }
+        return ((screens.count > 1 || uneven) ? named : [], false)
+    }
+
+    func parseBundle(at bundlePath: String) -> ParsedBundle? {
         let resources = "\(bundlePath)/Contents/Resources"
 
         guard let profile = readPlist(at: "\(resources)/profile.plist"),
@@ -131,11 +188,15 @@ struct DeviceProfileCatalog {
             .deletingPathExtension()
             .lastPathComponent
 
+        let (screens, incomplete) = parseScreens(caps)
+
         return ParsedBundle(
             identifiers: identifiers,
             simulatorName: name,
             cornerRadius: radius,
-            chromeIdentifier: profile["chromeIdentifier"] as? String
+            chromeIdentifier: profile["chromeIdentifier"] as? String,
+            screens: screens,
+            hasIncompleteScreenData: incomplete
         )
     }
 

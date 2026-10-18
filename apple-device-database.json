@@ -878,7 +878,35 @@
         "bezel": 59,
         "name": "iPhone Duo",
         "source": "simulator",
-        "profileBezel": 59
+        "profileBezel": 59,
+        "screens": [
+          {
+            "name": "Outer",
+            "nativeSize": [
+              1398,
+              2034
+            ],
+            "corners": {
+              "topLeft": 8,
+              "topRight": 59,
+              "bottomLeft": 8,
+              "bottomRight": 59
+            }
+          },
+          {
+            "name": "Inner",
+            "nativeSize": [
+              2007,
+              2853
+            ],
+            "corners": {
+              "topLeft": 55,
+              "topRight": 55,
+              "bottomLeft": 55,
+              "bottomRight": 55
+            }
+          }
+        ]
       },
       "iPhone19,7": {
         "bezel": 62,

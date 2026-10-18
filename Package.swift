@@ -21,7 +21,13 @@ let package = Package(
       ],
       path: "Sources/BezelGenerator",
       swiftSettings: [.swiftLanguageMode(.v6)]
-    )
+    ),
+    .testTarget(
+      name: "BezelGeneratorTests",
+      dependencies: ["BezelGenerator"],
+      path: "Tests/BezelGeneratorTests",
+      swiftSettings: [.swiftLanguageMode(.v6)]
+    ),
   ],
   swiftLanguageModes: [.v6]
 )

@@ -61,6 +61,14 @@ struct ScanReport: Sendable {
     /// Identifiers whose database name disagrees with Xcode's, as (identifier, old, new).
     var renames: [(identifier: String, from: String, to: String)] = []
 
+    /// Devices whose per-screen corners differ from the database, with what to write. `nil`
+    /// means the catalog no longer describes the device per screen and the entry is removed.
+    var screenUpdates: [(identifier: String, name: String, screens: [ScreenInfo]?)] = []
+
+    /// Devices Xcode describes as multi-screen without complete per-screen data. Only the single
+    /// radius could be recorded for these, so each needs measuring by hand.
+    var incompleteScreenDevices: [(identifier: String, name: String)] = []
+
     /// Devices present in both sources whose radius already matched.
     var confirmedCount: Int = 0
 
@@ -93,7 +101,7 @@ struct ScanReport: Sendable {
         }
     }
 
-    var hasChanges: Bool { entries.contains { $0.outcome.writesValue } || !renames.isEmpty }
+    var hasChanges: Bool { entries.contains { $0.outcome.writesValue } || !renames.isEmpty || !screenUpdates.isEmpty }
 
     // MARK: - Verification targets
 
@@ -148,6 +156,7 @@ extension ScanReport {
         md += "| Awaiting verification | \(awaiting.count) |\n"
         if !failed.isEmpty { md += "| Verification failed | \(failed.count) |\n" }
         if !renames.isEmpty { md += "| Name corrections | \(renames.count) |\n" }
+        if !screenUpdates.isEmpty { md += "| Per-screen corners updated | \(screenUpdates.count) |\n" }
         md += "| Legacy (no longer in Xcode) | \(legacyOnlyCount) |\n\n"
 
         md += section(
@@ -171,6 +180,35 @@ extension ScanReport {
             note: "A boot was required but could not produce a value. Moved to `problematic` for retry."
         )
 
+        if !screenUpdates.isEmpty {
+            md += "### Per-screen corners\n\nRead from Xcode's device profile. Physical corners with the device upright, in points.\n\n"
+            md += "| Identifier | Device | Screen | Native size | TL | TR | BL | BR |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n"
+            for update in screenUpdates {
+                guard let screens = update.screens else {
+                    md += "| `\(update.identifier)` | \(update.name) | removed | | | | | |\n"
+                    continue
+                }
+                for screen in screens {
+                    let size = screen.nativeSize.map { Triage.format($0) }.joined(separator: " × ")
+                    let c = screen.corners
+                    md += "| `\(update.identifier)` | \(update.name) | \(screen.name ?? "") | \(size) | \(Triage.format(c.topLeft)) | \(Triage.format(c.topRight)) | \(Triage.format(c.bottomLeft)) | \(Triage.format(c.bottomRight)) |\n"
+                }
+            }
+            md += "\n"
+        }
+
+        if !incompleteScreenDevices.isEmpty {
+            md += "### ⚠️ Multi-screen devices without per-screen data\n\n"
+            md += "Xcode lists more than one built-in screen for these devices but not enough to read each screen's corners. "
+            md += "Only the single radius was recorded, which is wrong for at least one screen. "
+            md += "Measure them by hand — see `MAINTAINING.md`.\n\n"
+            md += "| Identifier | Device |\n| --- | --- |\n"
+            for device in incompleteScreenDevices {
+                md += "| `\(device.identifier)` | \(device.name) |\n"
+            }
+            md += "\n"
+        }
+
         if !renames.isEmpty {
             md += "### Name corrections\n\n| Identifier | Was | Now |\n| --- | --- | --- |\n"
             for rename in renames {
@@ -179,7 +217,7 @@ extension ScanReport {
             md += "\n"
         }
 
-        if !hasChanges && awaiting.isEmpty && failed.isEmpty {
+        if !hasChanges && awaiting.isEmpty && failed.isEmpty && incompleteScreenDevices.isEmpty {
             md += "No changes — the database matches Xcode's device catalog.\n"
         }
 

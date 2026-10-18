@@ -56,6 +56,13 @@ struct DeviceInfo: Codable {
     /// re-opened only if Xcode itself changes the value.
     var profileBezel: Double?
 
+    /// Per-screen corner radii for devices whose display is not a single uniform shape.
+    ///
+    /// Only multi-screen devices such as iPhone Duo carry this. It cannot be measured by a
+    /// scan, which reads one scalar, so it is entered by hand and every scan write carries it
+    /// through untouched. See ``ScreenInfo``.
+    var screens: [ScreenInfo]?
+
     /// Whether this value came from an actual simulator boot rather than a plist read.
     /// Only these entries are allowed to corroborate others in ``Triage``.
     var isRuntimeVerified: Bool { (source ?? .simulator) == .simulator }
@@ -64,6 +71,28 @@ struct DeviceInfo: Codable {
     func hasAdjudicated(_ catalogValue: Double) -> Bool {
         guard isRuntimeVerified, let profileBezel else { return false }
         return abs(profileBezel - catalogValue) < 0.005
+    }
+}
+
+/// The physical corner radii of one screen, in portrait-up orientation, in points.
+///
+/// Corners belong to the hardware, so a rotated interface moves them rather than changing them.
+/// BezelKit rotates this set to match the current interface orientation.
+struct ScreenInfo: Codable, Equatable {
+    /// Optional human label, e.g. `Outer`. Not used for matching.
+    var name: String?
+
+    /// `UIScreen.nativeBounds` size in pixels, portrait-up. Identifies which screen is active
+    /// independently of rotation and fold state.
+    var nativeSize: [Double]
+
+    var corners: Corners
+
+    struct Corners: Codable, Equatable {
+        var topLeft: Double
+        var topRight: Double
+        var bottomLeft: Double
+        var bottomRight: Double
     }
 }
 
@@ -115,6 +144,18 @@ struct DeviceProfile: Sendable {
     /// `com.apple.dt.devicekit.chrome.phone11`. Devices sharing one are the same physical
     /// design, which is what makes cross-device corroboration meaningful.
     let chromeIdentifier: String?
+
+    /// Per-screen corners, filled only for devices a single radius cannot describe: more than
+    /// one built-in screen, or a screen whose corners differ. Empty for every ordinary device.
+    ///
+    /// Read from the `displays` list in `capabilities.plist`, which carries each built-in
+    /// screen's size and four corner radii.
+    let screens: [ScreenInfo]
+
+    /// Xcode lists more than one built-in screen for this device but not enough data to describe
+    /// them all, so ``screens`` is empty and the single radius is all the scan can record.
+    /// Surfaced by the scan so a multi-screen device is never silently reduced to one number.
+    var hasIncompleteScreenData = false
 
     var category: DeviceCategory? { DeviceCategory(identifier: identifier) }
 }

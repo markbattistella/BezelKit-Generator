@@ -137,7 +137,12 @@ extension ScanCommand {
         for entry in report.entries {
             switch entry.outcome {
                 case .accepted(let source, let value, _):
-                    database[entry.identifier] = DeviceInfo(bezel: value, name: entry.name, source: source)
+                    database[entry.identifier] = DeviceInfo(
+                        bezel: value,
+                        name: entry.name,
+                        source: source,
+                        screens: database[entry.identifier]?.screens
+                    )
                     database.problematic.removeValue(forKey: entry.identifier)
 
                 case .verified(let value, _):
@@ -145,7 +150,8 @@ extension ScanCommand {
                         bezel: value,
                         name: entry.name,
                         source: .simulator,
-                        profileBezel: entry.profileValue
+                        profileBezel: entry.profileValue,
+                        screens: database[entry.identifier]?.screens
                     )
                     database.problematic.removeValue(forKey: entry.identifier)
 
@@ -154,6 +160,14 @@ extension ScanCommand {
                         database.problematic[entry.identifier] = PendingDeviceInfo(name: entry.name)
                     }
             }
+        }
+
+        // Per-screen corners. A device not yet in the database (still awaiting a boot) has no
+        // entry to attach them to; the next scan picks them up once it does.
+        for update in report.screenUpdates {
+            guard var info = database[update.identifier] else { continue }
+            info.screens = update.screens
+            database[update.identifier] = info
         }
 
         // Names are Xcode's to define. Apply them even where the measurement was untouched.
@@ -188,7 +202,33 @@ extension ScanCommand {
             }
         }
 
-        if !report.hasChanges && report.awaiting.isEmpty && report.failed.isEmpty {
+        if !report.screenUpdates.isEmpty {
+            logger.info("Per-screen corners: \(report.screenUpdates.count)", indent: 2)
+            for update in report.screenUpdates {
+                guard let screens = update.screens else {
+                    logger.log("- \(update.identifier) (\(update.name)): removed", indent: 6)
+                    continue
+                }
+                logger.log("- \(update.identifier) (\(update.name))", indent: 6)
+                for screen in screens {
+                    let c = screen.corners
+                    let size = screen.nativeSize.map { Triage.format($0) }.joined(separator: "×")
+                    logger.log("  \(screen.name ?? "screen") \(size)px: TL \(Triage.format(c.topLeft)) TR \(Triage.format(c.topRight)) BL \(Triage.format(c.bottomLeft)) BR \(Triage.format(c.bottomRight))", indent: 6)
+                }
+            }
+        }
+
+        if !report.incompleteScreenDevices.isEmpty {
+            logger.warn("Multi-screen device(s) found without per-screen data: \(report.incompleteScreenDevices.count)", indent: 2)
+            for device in report.incompleteScreenDevices {
+                logger.log("- \(device.identifier) (\(device.name))", indent: 6)
+            }
+            logger.log("Xcode lists several built-in screens but not each one's corners, so only a single", indent: 6)
+            logger.log("radius was recorded. That is wrong for at least one screen: measure it by hand", indent: 6)
+            logger.log("and add a 'screens' entry (see MAINTAINING.md).", indent: 6)
+        }
+
+        if !report.hasChanges && report.awaiting.isEmpty && report.failed.isEmpty && report.incompleteScreenDevices.isEmpty {
             logger.success("Database matches Xcode's device catalog 🎉", indent: 2)
         }
     }
